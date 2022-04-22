@@ -11,3 +11,7 @@
 .PHONY: pong
 pong: $(GO_DEBUG_DIR)/pong
 	$<
+
+.PHONY: ping
+ping: $(GO_DEBUG_DIR)/ping
+	$<

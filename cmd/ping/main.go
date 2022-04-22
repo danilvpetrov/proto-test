@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"os"
 
@@ -22,7 +23,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close()
+	defer conn.Close() //nolint
 
 	client := data.NewPingPongClient(conn)
 
@@ -30,7 +31,7 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	res, err := client.DoPingPong(ctx, &data.PingRequest{
+	stream, err := client.DoPingPong(ctx, &data.PingRequest{
 		Ping: &data.Ping{
 			Text: "Ping",
 		},
@@ -39,6 +40,16 @@ func main() {
 		panic(err)
 	}
 
-	log.Printf("Response recieved: %v", res)
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
+			log.Print("stream closed")
+			return
+		}
+		if err != nil {
+			log.Fatalf("cannot receive %v", err)
+		}
+		log.Printf("resp received: %s", resp.Pong.Text)
+	}
 
 }

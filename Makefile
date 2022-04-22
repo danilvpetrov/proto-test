@@ -8,6 +8,6 @@
 
 ################################################################################
 
-.PHONY: proto-test
-proto-test: $(GO_DEBUG_DIR)/proto-test
+.PHONY: pong
+pong: $(GO_DEBUG_DIR)/pong
 	$<

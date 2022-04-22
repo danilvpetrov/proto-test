@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package proto.test.v1;
+
+option go_package = "github.com/danilvpetrov/proto-test/data";
+
+import "github.com/danilvpetrov/proto-test/data/message.proto";
+
+// The PingPong service sends Ping requests and receives Pong responces.
+service PingPong {
+  // Sends a greeting
+  rpc DoPingPong(PingRequest) returns (PongResponse) {}
+}
+
+// The request containing the Ping message.
+message PingRequest { proto.test.v1.Ping ping = 1; }
+
+// The response message containing the Pong message
+message PongResponse { proto.test.v1.Pong pong = 1; }

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package proto.test.v1;
+
+option go_package = "github.com/danilvpetrov/proto-test/data";
+
+// Ping is a generic message sent by a client to a server.
+message Ping { string text = 1; }
+
+// Pong is a generic message sent by a server to a client.
+message Pong { string text = 1; }

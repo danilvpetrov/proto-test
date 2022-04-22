@@ -6,9 +6,9 @@ option go_package = "github.com/danilvpetrov/proto-test/data";
 
 import "github.com/danilvpetrov/proto-test/data/message.proto";
 
-// The PingPong service sends Ping requests and receives Pong responces.
+// The PingPong service sends Ping requests and receives Pong responses.
 service PingPong {
-  // Sends a greeting
+  // Sends a ping request and expects a pong response.
   rpc DoPingPong(PingRequest) returns (PongResponse) {}
 }
 

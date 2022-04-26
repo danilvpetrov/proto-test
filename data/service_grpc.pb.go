@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PingPongClient interface {
 	// Sends a ping request and expects a pong response.
-	DoPingPong(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (PingPong_DoPingPongClient, error)
+	DoPingPong(ctx context.Context, opts ...grpc.CallOption) (PingPong_DoPingPongClient, error)
 }
 
 type pingPongClient struct {
@@ -34,28 +34,27 @@ func NewPingPongClient(cc grpc.ClientConnInterface) PingPongClient {
 	return &pingPongClient{cc}
 }
 
-func (c *pingPongClient) DoPingPong(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (PingPong_DoPingPongClient, error) {
+func (c *pingPongClient) DoPingPong(ctx context.Context, opts ...grpc.CallOption) (PingPong_DoPingPongClient, error) {
 	stream, err := c.cc.NewStream(ctx, &PingPong_ServiceDesc.Streams[0], "/proto.test.v1.PingPong/DoPingPong", opts...)
 	if err != nil {
 		return nil, err
 	}
 	x := &pingPongDoPingPongClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
 	return x, nil
 }
 
 type PingPong_DoPingPongClient interface {
+	Send(*PingRequest) error
 	Recv() (*PongResponse, error)
 	grpc.ClientStream
 }
 
 type pingPongDoPingPongClient struct {
 	grpc.ClientStream
+}
+
+func (x *pingPongDoPingPongClient) Send(m *PingRequest) error {
+	return x.ClientStream.SendMsg(m)
 }
 
 func (x *pingPongDoPingPongClient) Recv() (*PongResponse, error) {
@@ -71,14 +70,14 @@ func (x *pingPongDoPingPongClient) Recv() (*PongResponse, error) {
 // for forward compatibility
 type PingPongServer interface {
 	// Sends a ping request and expects a pong response.
-	DoPingPong(*PingRequest, PingPong_DoPingPongServer) error
+	DoPingPong(PingPong_DoPingPongServer) error
 }
 
 // UnimplementedPingPongServer should be embedded to have forward compatible implementations.
 type UnimplementedPingPongServer struct {
 }
 
-func (UnimplementedPingPongServer) DoPingPong(*PingRequest, PingPong_DoPingPongServer) error {
+func (UnimplementedPingPongServer) DoPingPong(PingPong_DoPingPongServer) error {
 	return status.Errorf(codes.Unimplemented, "method DoPingPong not implemented")
 }
 
@@ -94,15 +93,12 @@ func RegisterPingPongServer(s grpc.ServiceRegistrar, srv PingPongServer) {
 }
 
 func _PingPong_DoPingPong_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(PingRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(PingPongServer).DoPingPong(m, &pingPongDoPingPongServer{stream})
+	return srv.(PingPongServer).DoPingPong(&pingPongDoPingPongServer{stream})
 }
 
 type PingPong_DoPingPongServer interface {
 	Send(*PongResponse) error
+	Recv() (*PingRequest, error)
 	grpc.ServerStream
 }
 
@@ -112,6 +108,14 @@ type pingPongDoPingPongServer struct {
 
 func (x *pingPongDoPingPongServer) Send(m *PongResponse) error {
 	return x.ServerStream.SendMsg(m)
+}
+
+func (x *pingPongDoPingPongServer) Recv() (*PingRequest, error) {
+	m := new(PingRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // PingPong_ServiceDesc is the grpc.ServiceDesc for PingPong service.
@@ -126,6 +130,7 @@ var PingPong_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "DoPingPong",
 			Handler:       _PingPong_DoPingPong_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "github.com/danilvpetrov/proto-test/data/service.proto",

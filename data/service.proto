@@ -9,7 +9,7 @@ import "github.com/danilvpetrov/proto-test/data/message.proto";
 // The PingPong service sends Ping requests and receives Pong responses.
 service PingPong {
   // Sends a ping request and expects a pong response.
-  rpc DoPingPong(PingRequest) returns (stream PongResponse) {}
+  rpc DoPingPong(stream PingRequest) returns (stream PongResponse) {}
 }
 
 // The request containing the Ping message.

@@ -49,3 +49,30 @@ spec:
   selector:
     app.kubernetes.io/part-of: ping-pong
     app.kubernetes.io/name: pong
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ping
+  namespace: ping-pong
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: ping-pong
+      app.kubernetes.io/name: ping
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: ping-pong
+        app.kubernetes.io/name: ping
+    spec:
+      containers:
+        - name: ping
+          image: "ping-pong:dev"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PONG_SERVER_ADDR
+              value: "pong:9090"
+          command: ["/ping"]
+
